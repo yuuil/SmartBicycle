@@ -1,0 +1,1 @@
+cmd_/home/test/smart_bicycle/smart_bicycle_B/MODULE_PI_B.ko := arm-linux-gnueabi-ld -EL -r  -T ./scripts/module-common.lds --build-id  -o /home/test/smart_bicycle/smart_bicycle_B/MODULE_PI_B.ko /home/test/smart_bicycle/smart_bicycle_B/MODULE_PI_B.o /home/test/smart_bicycle/smart_bicycle_B/MODULE_PI_B.mod.o ;  true

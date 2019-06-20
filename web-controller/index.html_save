@@ -1,0 +1,120 @@
+<html>
+    <head>
+        <meta charset="UTF-8">
+        <title>Control Button</title>
+        <link rel="stylesheet" href="./css/style.css">
+        <script type="text/javascript" src="./js/jquery.js"></script>
+    </head>
+    <body>
+        <section class="btn-wrapper">
+            <div class="btn-float">
+                <input type="button" value="FORWARD" class="btn"><br>
+                <input type="button" value="LEFT" class="btn">
+                <input type="button" value="STOP" class="btn">
+                <input type="button" value="RIGHT" class="btn"><br>
+                <input type="button" value="BACKWARD" class="btn">
+            </div>  
+        </section>
+        
+        <script>
+            function createFile() {
+                var left = $("input[value='LEFT']").hasClass("onclk");
+                if(left == true) left = Number(1);
+                else left = Number(0);
+                
+                var right = $("input[value='RIGHT']").hasClass("onclk");
+                if(right == true) right = Number(1);
+                else right = Number(0);
+                
+                var forward = $("input[value='FORWARD']").hasClass("onclk");
+                if(forward == true) forward = Number(1);
+                else forward = Number(0);
+                
+                var backward = $("input[value='BACKWARD']").hasClass("onclk");
+                if(backward == true) backward = Number(1);
+                else backward = Number(0);
+                
+                var textToSave = forward + "\n" + backward + "\n" + left + "\n" + right;
+//                var dataSave = document.createElement('a');
+//
+//                dataSave.href = 'data:attachment/text,' + encodeURI(textToSave);
+//                dataSave.target = '_blank';
+//                dataSave.download = 'data.txt';
+//                dataSave.click();
+                
+                $(function() {
+                  $.ajax( {
+                      url: '/',
+                      dataType: 'json',
+                      type: 'POST',
+                      data: {data:textToSave},
+                    success: function(data) {
+                        console.log("성공");
+                    }
+                });  
+                })
+            }
+            
+            function lr_chk(clk) {
+                if(clk == "LEFT") {
+                    if($("input[value='RIGHT']").hasClass("onclk")) {
+                        alert("우회전이 작동중입니다!");
+                        return false;
+                    }
+                }
+                else if(clk == "RIGHT") {
+                    if($("input[value='LEFT']").hasClass("onclk")) {
+                        alert("좌회전이 작동중입니다!");
+                        return false;
+                    }
+                }
+                return true;
+            }
+            
+            function fb_chk(clk) {
+                if(clk == "FORWARD") {
+                    if($("input[value='BACKWARD']").hasClass("onclk")) {
+                        alert("후진이 작동중입니다!");
+                        return false;
+                    }
+                }
+                else if(clk == "BACKWARD") {
+                    if($("input[value='FORWARD']").hasClass("onclk")) {
+                        alert("전진이 작동중입니다!");
+                        return false;
+                    }
+                }
+                return true;
+            }
+            
+            function stp_chk(clk) {
+                if(clk == "STOP") {
+                    $("input[value='LEFT']").removeClass("onclk");
+                    $("input[value='RIGHT']").removeClass("onclk");
+                    $("input[value='FORWARD']").removeClass("onclk");
+                    $("input[value='BACKWARD']").removeClass("onclk");
+                    return true;
+                }
+                return false;
+            }
+            $(function() {
+                $("input[type='button']").click(function() {
+                    var ret;
+                    var clk = $(this).val();
+                    if($(this).hasClass("onclk") == 1) {
+                        $(this).removeClass("onclk");
+                    }
+                    else {
+                        if((lr_chk(clk) == true) && (fb_chk(clk) == true) ) {
+                            $(this).addClass("onclk");
+                            ret = stp_chk(clk);
+                            if(ret == true) $(this).removeClass("onclk");
+                        }
+                    }
+                    
+                    createFile();
+                })
+            })
+        </script>
+    </body>
+</html>

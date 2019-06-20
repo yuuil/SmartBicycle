@@ -1,0 +1,237 @@
+<html>
+    <head>
+        <meta charset="UTF-8">
+        <title>Parent Control</title>
+        <!--<link rel="stylesheet" href="./css/style.css">-->
+        <script type="text/javascript" src="./js/jquery.js"></script>
+        <style>
+            .btn-wrapper {
+                text-align: center;
+                display: table;
+                width: 70%;
+                margin: 0 auto;
+            }
+
+            .btn-float {
+                min-width: 600px;
+            }
+
+            @media(min-height: 300px) {
+                .btn-float {
+                    display: table-cell;
+                    vertical-align: middle;
+                }
+            }
+
+            input {
+                cursor: pointer;
+                outline: 0;
+                transition: all 0.7s;
+            }
+
+            input[type="button"] {
+                -webkit-appearance: none;
+                -moz-appearance: none;
+                appearance: none;
+                border-radius: 50%;
+                margin: 3% 5%;
+                width: 100px;
+                height: 100px;
+                color: #333;
+            }
+
+            input:hover {
+                background: #90DDE9;
+                opacity: 0.8;
+                text-decoration: underline;
+                color: #fff;
+                border: 0;
+            }
+
+            input[value="LEFT"] {
+                background-image: url("../img/921.png");
+                background-size: contain;
+            }
+            input[value="RIGHT"] {
+                background-image: url("../img/922.png");
+                background-size: contain;
+            }
+            input[value="FORWARD"] {
+                background-image: url("../img/923.png");
+                background-size: contain;
+                color: #333;
+            }
+            input[value="BACKWARD"] {
+                background-image: url("../img/924.png");
+                background-size: contain;
+                color: #333;
+            }
+
+            input[value="STOP"] {
+                border-radius: 0;
+                outline: 0;
+                width: 90px;
+                height: 90px;
+                margin: 3%;
+                color: #333;
+            }
+
+            input:hover {
+                color: #fff;
+            }
+
+            .onclk {
+                background: #C44953;
+                color: #333;
+            }
+
+        </style>
+    </head>
+    <body>
+	    <img id="streamimage" class="xform" src="http://192.168.0.7:8080/?action=stream" style="display:block; margin:0 auto; transform:rotate(270deg); width: 320px; height: 480px;">
+        <section class="btn-wrapper">
+            <div class="btn-float">
+                <input type="button" value="LEFT" class="btn">
+                <input type="button" value="STOP" class="btn">
+                <input type="button" value="RIGHT" class="btn"><br>
+                <input type="button" value="LOCK" class="btn">
+                <input type="button" value="WARNING" class="btn" style="background-image: url(../img/off.png); background-size:30% 30%; background-position: 50% 10%; background-repeat: no-repeat;">
+            </div>  
+        </section>
+        
+        <script>
+            function createFile() {
+                var left = $("input[value='LEFT']").hasClass("onclk");
+                if(left == true) left = Number(1);
+                else left = Number(0);
+                
+                var right = $("input[value='RIGHT']").hasClass("onclk");
+                if(right == true) right = Number(1);
+                else right = Number(0);
+                
+                var lock = $("input[value='LOCK']").hasClass("onclk");
+                if(lock == true) lock = Number(1);
+                else lock = Number(0);
+                
+                var warn = $("input[value='WARNING']").hasClass("onclk");
+                if(warn == true) warn = Number(1);
+                else warn = Number(0);
+                
+                var textToSave = left + "\n" + right + "\n" + lock + "\n" + warn;
+                /*var dataSave = document.createElement('a');
+
+                dataSave.href = 'data:attachment/text,' + encodeURI(textToSave);
+                dataSave.target = '_blank';
+                dataSave.download = 'data.txt';
+                dataSave.click();*/
+                
+                $(function() {
+                  $.ajax( {
+                    url: '/',
+                    dataType: 'json',
+                    type: 'POST',
+                    data: {data:textToSave},
+                    success: function(data) {
+                        console.log("성공");
+                    }
+                });  
+                })
+            }
+            
+            function lr_chk(clk) {
+                if(clk == "LEFT") {
+                    if($("input[value='RIGHT']").hasClass("onclk")) {
+                        alert("우회전이 작동중입니다!");
+                        return false;
+                    }
+                }
+                else if(clk == "RIGHT") {
+                    if($("input[value='LEFT']").hasClass("onclk")) {
+                        alert("좌회전이 작동중입니다!");
+                        return false;
+                    }
+                }
+                return true;
+            }
+            
+            
+            function stp_chk(clk) {
+                if(clk == "STOP") {
+                    $("input[value='LEFT']").removeClass("onclk");
+                    $("input[value='RIGHT']").removeClass("onclk");
+                    return true;
+                }
+                return false;
+            }
+            
+            function lock_chk(clk) {
+                var lock = $("input[value='LOCK']").hasClass("onclk");
+                if(clk == "LOCK" || clk == "WARNING") {
+                    $(function() {
+                        $.ajax( {
+                            url: '/parent',
+                            dataType: 'json',
+                            type: 'POST',
+                            data: {chk: lock},
+                            success: function(data) {
+                                console.log(data);
+                            }
+                        })
+                    })
+                }
+            }
+            
+            function warn_chk(clk) {
+                var tmp = $("input[value='WARNING']");
+                if(clk == "WARNING") {
+                    if(tmp.hasClass("onclk") == 1) {
+                        tmp.css({
+                            "background-image": "url(../img/alarm.png)",
+                        })
+                        $("input[value='LOCK']").addClass("onclk");
+                        return true;
+                    }
+                    else {
+                        tmp.css({
+                            "background-image": "url(../img/off.png)",
+                        })
+                        $("input[value='LOCK']").removeClass("onclk");
+                        return false;
+                    }
+                }
+            }
+            
+            $(function() {
+                $("input[type='button']").click(function() {
+                    var ret, del;
+		    var tmp = $(this);
+                    var clk = $(this).val();
+
+
+                    if($(this).hasClass("onclk") == 1) {
+                        $(this).removeClass("onclk");
+                    }
+                    else {
+                        if((lr_chk(clk) == true)) {
+                            $(this).addClass("onclk");
+                            ret = stp_chk(clk);
+                            if(ret == true) $(this).removeClass("onclk");
+                        }
+			if(clk == "LEFT" || clk == "RIGHT") {
+			   del = setTimeout(function() {
+				createFile();
+				tmp.removeClass("onclk");
+			   }, 700);
+			}
+                    }
+                    
+                    warn_chk(clk);
+                    lock_chk(clk);
+
+                    if(($(this).hasClass("onclk") == 1) || ($(this).hasClass("onclk") != 1 && clk != "LEFT" && clk != "RIGHT")) createFile();
+		    //clearTimeout(del);
+                })
+            })
+        </script>
+    </body>
+</html>

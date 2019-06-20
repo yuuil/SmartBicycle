@@ -1,0 +1,229 @@
+<html>
+    <head>
+        <meta charset="UTF-8">
+        <title>Child Action</title>
+<!--        <link rel="stylesheet" href="./css/style.css?ver=1">-->
+        <script type="text/javascript" src="./js/jquery.js"></script>
+        <style>
+            .btn-wrapper {
+                text-align: center;
+                display: table;
+                height: 100%;
+                width: 70%;
+                margin: 0 auto;
+            }
+
+            .btn-float {
+                min-width: 600px;
+            }
+
+            @media(min-height: 300px) {
+                .btn-float {
+                    display: table-cell;
+                    vertical-align: middle;
+                }
+            }
+
+            input {
+                cursor: pointer;
+                outline: 0;
+                transition: all 0.7s;
+            }
+
+            input[type="button"] {
+                -webkit-appearance: none;
+                -moz-appearance: none;
+                appearance: none;
+                border-radius: 50%;
+                margin: 3% 5%;
+                width: 100px;
+                height: 100px;
+                color: #333;
+            }
+
+            input:hover {
+                background: #90DDE9;
+                opacity: 0.8;
+                text-decoration: underline;
+                color: #fff;
+                border: 0;
+            }
+
+            input[value="LEFT"] {
+                background-image: url("../img/921.png");
+                background-size: contain;
+            }
+            input[value="RIGHT"] {
+                background-image: url("../img/922.png");
+                background-size: contain;
+            }
+            input[value="FORWARD"] {
+                background-image: url("../img/923.png");
+                background-size: contain;
+                color: #333;
+            }
+            input[value="BACKWARD"] {
+                background-image: url("../img/924.png");
+                background-size: contain;
+                color: #333;
+            }
+
+            input[value="STOP"] {
+                border-radius: 0;
+                outline: 0;
+                width: 90px;
+                height: 90px;
+                margin: 3%;
+                color: #333;
+            }
+
+            input:hover {
+                color: #fff;
+            }
+
+            .onclk {
+                background: #C44953;
+                color: #333;
+            }
+
+        </style>
+    </head>
+    <body>
+        <section class="btn-wrapper">
+            <div class="btn-float">
+                <input type="button" value="FORWARD" class="btn"><br>
+                <input type="button" value="LEFT" class="btn">
+                <input type="button" value="STOP" class="btn">
+                <input type="button" value="RIGHT" class="btn"><br>
+                <input type="button" value="BACKWARD" class="btn">
+            </div>  
+        </section>
+        
+        <script>
+            
+            //버튼 현재 상태 txt 파일로 저장
+            function createFile() {
+                var left = $("input[value='LEFT']").hasClass("onclk");
+                if(left == true) left = Number(1);
+                else left = Number(0);
+                
+                var right = $("input[value='RIGHT']").hasClass("onclk");
+                if(right == true) right = Number(1);
+                else right = Number(0);
+                
+                var forward = $("input[value='FORWARD']").hasClass("onclk");
+                if(forward == true) forward = Number(1);
+                else forward = Number(0);
+                
+                var backward = $("input[value='BACKWARD']").hasClass("onclk");
+                if(backward == true) backward = Number(1);
+                else backward = Number(0);
+                
+                var textToSave = forward + "\n" + backward + "\n" + left + "\n" + right;
+
+                $(function() {
+                  $.ajax( {
+                      url: '/',
+                      dataType: 'json',
+                      type: 'POST',
+                      data: {data:textToSave},
+                    success: function(data) {
+                        console.log("성공");
+                    }
+                });  
+                })
+            }
+            /*
+            //좌우 동시에 눌리는지 확인
+            function lr_chk(clk) {
+                if(clk == "LEFT") {
+                    if($("input[value='RIGHT']").hasClass("onclk")) {
+                        alert("우회전이 작동중입니다!");
+                        return false;
+                    }
+                }
+                else if(clk == "RIGHT") {
+                    if($("input[value='LEFT']").hasClass("onclk")) {
+                        alert("좌회전이 작동중입니다!");
+                        return false;
+                    }
+                }
+                return true;
+            }
+            */
+
+            //전후 동시에 눌리는지 확인
+            function fb_chk(clk) {
+                if(clk == "FORWARD") {
+                    if($("input[value='BACKWARD']").hasClass("onclk")) {
+                        alert("후진이 작동중입니다!");
+                        return false;
+                    }
+                }
+                else if(clk == "BACKWARD") {
+                    if($("input[value='FORWARD']").hasClass("onclk")) {
+                        alert("전진이 작동중입니다!");
+                        return false;
+                    }
+                }
+                return true;
+            }
+            
+            //정지 버튼 눌렸는지 확인 후 초기화
+            function stp_chk(clk) {
+                if(clk == "STOP") {
+                    $("input[value='LEFT']").removeClass("onclk");
+                    $("input[value='RIGHT']").removeClass("onclk");
+                    $("input[value='FORWARD']").removeClass("onclk");
+                    $("input[value='BACKWARD']").removeClass("onclk");
+                    return true;
+                }
+                return false;
+            }
+            
+            //버튼 눌렸을 때 부모 컨트롤러에서 락이 눌렸는지 확인 후 처리
+            $(function() {
+                $("input[type='button']").click(function() {
+                    var ret, del;
+                    var clk = $(this).val();
+                    var lock;
+                    var tmp = $(this);
+
+                    $.ajax({
+                        url: 'http://192.168.0.7:3001/parent',
+                        dataType: 'json',
+                        type: 'GET',
+                        success: function(data) {
+                            lock = data.lock;
+                            
+                            if(lock == "true") {
+                                alert("Children Controller is locked");
+                            }
+                            else {
+                                if(tmp.hasClass("onclk") == 1) {
+                                    tmp.removeClass("onclk");
+                                }
+                                else {
+                                    if(fb_chk(clk) == true) {
+                                        tmp.addClass("onclk");
+                                        ret = stp_chk(clk);
+                                        if(ret == true) tmp.removeClass("onclk");
+				    }
+				    if(clk == "LEFT" || clk == "RIGHT") {
+					del = setTimeout(function() {
+						createFile();
+						tmp.removeClass("onclk");
+					      }, 700);
+				    }
+                                }
+                            }
+
+                            if( lock == "true" || (lock == "false" && clk != "LEFT" && clk != "RIGHT") ) createFile();
+			    //clearTimeout(del);
+                        }
+                    })
+                })
+            })
+        </script>
+    </body>
+</html>
